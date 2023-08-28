@@ -4,10 +4,12 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ChangeEvent, useState } from 'react';
+import Alert from '@mui/material/Alert';
 
 const WorkerSpawner = () => {
     const [numWorkers, setNumWorkers] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [open, setOpen] = React.useState(false);
 
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
         setNumWorkers(Number(event.target.value));
@@ -18,7 +20,7 @@ const WorkerSpawner = () => {
         for (let i = 0; i < numWorkers; i++) {
             console.log('Worker spawned');
         }
-        // setLoading(false);
+        setInterval(() => {setOpen(true); setLoading(false);}, 3000)
     };
 
     return (
@@ -37,6 +39,7 @@ const WorkerSpawner = () => {
                 >
                 {loading ? <CircularProgress size={24} /> : "Spawn Workers"}
             </Button>
+            {open && <Alert onClose={() => {setOpen(false)}}> Successfully spawned {numWorkers} workers. You can now start processing files.</Alert>}
         </Box>
     );
 }
