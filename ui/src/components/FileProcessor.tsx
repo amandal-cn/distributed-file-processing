@@ -41,7 +41,7 @@ const FileProcessor: React.FC = () => {
     setNumEnqueuedTasks(0);
     setNumBusyWorkers(0);
     setNumIdleWorkers(0);
-    setStatus("Unknown");
+    setStatus("GENERATING FILES");
     setNumFilesGenerated(0);
 
     if (numFiles && numEntriesPerFile) {
@@ -76,9 +76,8 @@ const FileProcessor: React.FC = () => {
             const currentProgress = Math.round((jobStatusOutput.num_completed_tasks * 100) / (jobStatusOutput.num_completed_tasks + jobStatusOutput.num_enqueued_tasks));
             setProgress(currentProgress);
 
-            console.log("currentProgress: ", currentProgress);
-            if(currentProgress === 100) {
-              console.log("intervalId: ", id);
+            const status = jobStatusOutput.status;
+            if(status == "COMPLETED" || status == "FAILED") {
               clearInterval(id);
               setLoading(false);
             }
@@ -103,20 +102,20 @@ const FileProcessor: React.FC = () => {
     return <>
         Status: <b>{status}</b>
         <br/>
-        Total number of files generated: <b>{numFilesGenerated}</b>
+        Files Generated: <b>{numFilesGenerated}</b>
         <br/>
-        Total number of Tasks: <b>{numTasks}</b>
+        Tasks: <b>{numTasks}</b>
         <br/>
-        Number of tasks completed: <b>{numCompletedTasks}</b>
+        Tasks Completed: <b>{numCompletedTasks}</b>
         <br/>
-        Number of tasks in the queue: <b>{numEnqueuedTasks}</b>
+        Task in Queue: <b>{numEnqueuedTasks}</b>
         <br/>
         <br/>
-        Total number of workers: <b>{numTotalWorkers}</b>
+        Workers: <b>{numTotalWorkers}</b>
         <br/>
-        Number of busy workers: <b>{numBusyWorkers}</b>
+        Busy Workers: <b>{numBusyWorkers}</b>
         <br/>
-        Number of idle workers: <b>{numIdleWorkers}</b>
+        Idle Workers: <b>{numIdleWorkers}</b>
         </>
   }
   

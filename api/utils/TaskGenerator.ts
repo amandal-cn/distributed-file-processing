@@ -41,14 +41,11 @@ export const generateTasks = async(job_id: string, num_files: number, num_entrie
         })
     }
     set(`num_tasks-${job_id}`, tasks.length);
-
-    set(`status-${job_id}`, "ENQUEUEING_TASKS");
+        
     // send tasks to queue
     for(let i = 0; i < tasks.length; i += 1) {
         enqueue(tasks[i], "task_queue");
     }
-
-    set(`status-${job_id}`, "PROCESSING");
 
     return tasks;
 }
