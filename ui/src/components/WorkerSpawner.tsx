@@ -5,22 +5,29 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ChangeEvent, useState } from 'react';
 import Alert from '@mui/material/Alert';
+import { spawnWorkers } from '../services/api';
 
 const WorkerSpawner = () => {
     const [numWorkers, setNumWorkers] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [open, setOpen] = React.useState(false);
+    const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
+    const [showErrorMessage, setShowErrorMessage] = React.useState(false);
 
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
         setNumWorkers(Number(event.target.value));
       };
 
-    const handleButtonClick = () => {
+    const handleButtonClick = async() => {
         setLoading(true);
-        for (let i = 0; i < numWorkers; i++) {
-            console.log('Worker spawned');
+        try {
+            await spawnWorkers({max_workers: numWorkers});
+            setLoading(false);
+            setShowSuccessMessage(true);
+        } catch (err) {
+            console.log(err);
+            setLoading(false);
+            setShowErrorMessage(true);
         }
-        setInterval(() => {setOpen(true); setLoading(false);}, 3000)
     };
 
     return (
@@ -39,7 +46,8 @@ const WorkerSpawner = () => {
                 >
                 {loading ? <CircularProgress size={24} /> : "Spawn Workers"}
             </Button>
-            {open && <Alert onClose={() => {setOpen(false)}}> Successfully spawned {numWorkers} workers. You can now start processing files.</Alert>}
+            {showSuccessMessage && <Alert severity='success' onClose={() => {setShowSuccessMessage(false)}}> Successfully spawned {numWorkers} workers. You can now start processing files.</Alert>}
+            {showErrorMessage && <Alert severity='error' onClose={() => {setShowErrorMessage(false)}}> Internal Error - Failed to spawn workers.</Alert>}
         </Box>
     );
 }
