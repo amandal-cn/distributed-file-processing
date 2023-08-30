@@ -7,6 +7,9 @@ def total_num_tasks_key(job_id):
 def result_aggregation_status_key(job_id):
     return f"result-aggregation-{job_id}"
 
+def job_status_key(job_id):
+    return f"status-${job_id}"
+
 def get_num_completed_tasks(redis_client, job_id):
     num_completed_tasks = redis_client.get(completed_tasks_key(job_id))
     return num_completed_tasks.decode()

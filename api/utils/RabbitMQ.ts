@@ -1,7 +1,7 @@
 import * as amqp from 'amqplib';
 import { Task } from '../types/Task';
 
-export async function sendTaskToQueue(task: Task, queue: string) {
+export async function enqueue(task: Task, queue: string) {
   let conn: amqp.Connection;
   try {
     conn = await amqp.connect('amqp://localhost');

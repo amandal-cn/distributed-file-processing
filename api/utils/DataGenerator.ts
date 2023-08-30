@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { set } from './Redis';
 
 export function generateFiles (job_id: string, num_files: number, num_entries_per_file: number) {
     console.log(`generating ${num_files} files for job ${job_id}`);
@@ -25,10 +26,9 @@ export function generateFiles (job_id: string, num_files: number, num_entries_pe
         const filepath: string = path.join(dir, filename);
         const data: object = { "entries": numbers };
 
-        fs.writeFile(filepath, JSON.stringify(data, null, 2), (err) => {
-            if (err) throw err;
-            console.log(`Data written to file: ${filepath}`);
-        });
+        fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+
+        set(`num_files_generated-${job_id}`, fileIndex+1);
     }
 }
 

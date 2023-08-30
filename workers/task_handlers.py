@@ -1,15 +1,8 @@
-def process_avg_task(task):
-    pass
-
-def process_sum_task(task):
-    pass
+import time
 
 def process_task(task):
-    if task['type'] == "sum":
-        process_sum_task(task)
-    elif task['type'] == "average":
-        process_avg_task(task)
-
+    time.sleep(3)
+    
 def aggregate_results(job_id):
-    pass
+    time.sleep(3)
     

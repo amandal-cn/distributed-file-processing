@@ -9,7 +9,7 @@ from constants import REDIS_HOST, REDIS_PORT, RABBITMQ_HOST, NUM_BUSY_WORKERS, T
 from task_handlers import process_task, aggregate_results
 from utils.logger import init_logger
 from utils.redis_utils import completed_tasks_key, get_num_completed_tasks, get_total_num_tasks, \
-    result_aggregation_status_key, get_aggregate_result_status, clean_up
+    result_aggregation_status_key, get_aggregate_result_status, clean_up, job_status_key
 
 logger = init_logger(__name__, logging.DEBUG)
 
@@ -22,9 +22,11 @@ def start_worker(_):
     channel.queue_declare(queue=TASK_QUEUE_NAME, durable=True)
 
     def aggregate_if_ready(job_id):
+        redis_client.set(job_status_key(job_id), "AGGREGATING");
+        
         total_num_tasks = get_total_num_tasks(redis_client, job_id)
         num_completed_tasks = get_num_completed_tasks(redis_client, job_id)
-        aggregate_result_status = get_aggregate_result_status(job_id)
+        aggregate_result_status = get_aggregate_result_status(redis_client, job_id)
         
         if total_num_tasks != num_completed_tasks or aggregate_result_status == "running" or aggregate_result_status == "completed":
             return
@@ -34,9 +36,11 @@ def start_worker(_):
         try:
             aggregate_results(job_id)
             redis_client.set(result_aggregation_status_key(job_id), "completed")
+            redis_client.set(job_status_key(job_id), "COMPLETED");
         except Exception as e:
             logger.error(f"Error aggregating result for job {job_id} - {str(e)}")
             redis_client.set(result_aggregation_status_key(job_id), "failed")
+            redis_client.set(job_status_key(job_id), "FAILED");
         finally:
             clean_up(redis_client, job_id)
     

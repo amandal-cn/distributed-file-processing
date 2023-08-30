@@ -36,10 +36,15 @@ export function spawnWorkers(req: Request<{}, {}, SpawnWorkersInput>, res: Respo
 }
 
 export async function getWorkers(req: Request, res: Response) {
-    const workersOutput: GetWorkersOutput = {
-        total_num_workers: Number(await get('max_workers')),
-        num_busy_workers: Number(await get("num_busy_workers"))
-    };
+    const total_num_workers = await get('max_workers');
+    const num_busy_workers = await get("num_busy_workers");
+    
+    console.log("total_num_workers: ", total_num_workers);
+    console.log("num_busy_workers: ", num_busy_workers);
 
+    const workersOutput: GetWorkersOutput = {
+        total_num_workers: Number(total_num_workers),
+        num_busy_workers: Number(num_busy_workers)
+    };
     res.status(200).send(workersOutput);
 }

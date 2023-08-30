@@ -18,10 +18,11 @@ export const set = async (key: string, value: any)  => {
 export const get = async (key: string)  => {
   try {
     // Get Value from Redis
-    const val = await redis.get('key');
-    console.log(`Retrieved value from Redis: ${val}`);
+    const val = await redis.get(key);
+    console.log(`Retrieved value for key ${key} from Redis: ${val}`);
     return val;
   } catch (error) {
     console.error('An error occurred:', error);
   }
 }
+
