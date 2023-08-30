@@ -4,14 +4,21 @@ This repository holds a comprehensive system designed for distributed file proce
 
 # For Developers
 
-## Setup Environment
+### Setup Environment
 
 ```bash
 ./scripts/setup.sh
 ```
 
-## Build and Run
+### Build and Run
 
 ```bash
 ./scripts/build-run.sh
 ```
+
+# UI
+
+![Home Page](docs/images/home-page.png)
+
+- One job is divided into multiple tasks where each task contains at most 5 files. For example - for 50 files, 10 tasks will be created
+- For now, you should start workers once only after starting the api server.
