@@ -22,3 +22,7 @@ This repository holds a comprehensive system designed for distributed file proce
 
 - One job is divided into multiple tasks where each task contains at most 5 files. For example - for 50 files, 10 tasks will be created
 - For now, you should start workers once only after starting the api server.
+
+# Flow Diagram
+
+![Architecture Diagram](docs/images/arch-diagram.png)
