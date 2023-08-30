@@ -6,9 +6,9 @@ This repository holds a comprehensive system designed for distributed file proce
 
 ### Setup Environment
 
-```bash
-./scripts/setup.sh
-```
+- Install node, npm (Recommended node: v16.14.2, npm: 8.5.0, tyepscript: )
+- Install [redis](https://redis.io/docs/getting-started/installation/) (make sure it run on default port 6379)
+- Install [rabbitmq](https://www.rabbitmq.com/download.html) 
 
 ### Build and Run
 
