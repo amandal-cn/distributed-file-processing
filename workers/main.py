@@ -9,7 +9,7 @@ from constants import REDIS_HOST, REDIS_PORT, RABBITMQ_HOST, NUM_BUSY_WORKERS, T
 from task_handlers import process_task, aggregate_results
 from utils.logger import init_logger
 from utils.redis_utils import completed_tasks_key, get_num_completed_tasks, get_total_num_tasks, \
-    result_aggregation_status_key, get_aggregate_result_status, clean_up, job_status_key
+    result_aggregation_status_key, get_aggregate_result_status, clean_up, job_status_key, get_num_entries_per_file, result_path_key
 
 logger = init_logger(__name__, logging.DEBUG)
 
@@ -25,6 +25,7 @@ def start_worker(_):
         total_num_tasks = get_total_num_tasks(redis_client, job_id)
         num_completed_tasks = get_num_completed_tasks(redis_client, job_id)
         aggregate_result_status = get_aggregate_result_status(redis_client, job_id)
+        num_entries_per_file = get_num_entries_per_file(redis_client, job_id)
         
         logger.info(f"total_num_of_tasks: {total_num_tasks}, num_completed_tasks: {num_completed_tasks}, aggregate_result_status: {aggregate_result_status}, job: {job_id}")
         if total_num_tasks != num_completed_tasks or aggregate_result_status == "running" or aggregate_result_status == "completed":
@@ -36,9 +37,10 @@ def start_worker(_):
         try:
             redis_client.set(job_status_key(job_id), "AGGREGATING")
             logger.info(f"successfully set job status to AGGREGATING for job: {job_id}")
-            aggregate_results(job_id)
+            result_path = aggregate_results(job_id, num_entries_per_file)
             redis_client.set(result_aggregation_status_key(job_id), "completed")
             redis_client.set(job_status_key(job_id), "COMPLETED")
+            redis_client.set(result_path_key(job_id), result_path)
         except Exception as e:
             logger.error(f"Error aggregating result for job {job_id} - {str(e)}")
             redis_client.set(result_aggregation_status_key(job_id), "failed")
@@ -58,6 +60,7 @@ def start_worker(_):
         redis_client.incr(NUM_BUSY_WORKERS)
         
         try:
+            logger.info(f"processing task: {task['task_id']}")
             # process task
             process_task(task)
             
@@ -75,6 +78,8 @@ def start_worker(_):
             logger.info(f"completed task {task['task_id']} for job {task['job_id']}")
             
             aggregate_if_ready(task['job_id'])
+            
+            logger.info(f"completed task: {task['task_id']}")
             
         except Exception as e:
             logger.error(f"Error processing task {task['task_id']} for job {task['job_id']} - {str(e)}")

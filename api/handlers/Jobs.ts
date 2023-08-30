@@ -34,6 +34,7 @@ export async function getJobStatus(req: Request<{job_id: string}>, res: Response
     const num_files = Number(await get(`num_files-${job_id}`));
     const num_entries_per_file = Number(await get(`num_entries_per_file-${job_id}`));
     const num_files_generated = Number(await get(`num_files_generated-${job_id}`));
+    const result_path = await get(`result_path-${job_id}`);
 
     const jobStatusOutput: JobStatusOutput = {
         job_id,
@@ -45,6 +46,10 @@ export async function getJobStatus(req: Request<{job_id: string}>, res: Response
         num_entries_per_file,
         num_files_generated
     };
+
+    if(result_path){
+        jobStatusOutput.result_path = result_path;
+    }
     
     res.status(200).send(jobStatusOutput);
 }

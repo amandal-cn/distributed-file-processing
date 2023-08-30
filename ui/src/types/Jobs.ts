@@ -16,4 +16,5 @@ export type JobStatusOutput = {
     num_files: number;
     num_entries_per_file: number;
     num_files_generated: number;
+    result_path?: string;
 }

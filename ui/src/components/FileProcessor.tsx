@@ -23,6 +23,7 @@ const FileProcessor: React.FC = () => {
   const [status, setStatus] = React.useState<string | null | undefined>("Unknown");
   const [numFilesGenerated, setNumFilesGenerated] = React.useState(0);
   const [showLogs, setShowLogs] = React.useState(false);
+  const [resultPath, setResultPath] = React.useState<undefined | string>(undefined);
 
   useEffect(() => {    
     return () => {
@@ -43,6 +44,7 @@ const FileProcessor: React.FC = () => {
     setNumIdleWorkers(0);
     setStatus("GENERATING FILES");
     setNumFilesGenerated(0);
+    setProgress(0);
 
     if (numFiles && numEntriesPerFile) {
       console.log(`Number of Files: ${numFiles}, Number of entries per file: ${numEntriesPerFile}`);
@@ -68,6 +70,7 @@ const FileProcessor: React.FC = () => {
             setNumCompletedTasks(jobStatusOutput.num_completed_tasks);
             setNumEnqueuedTasks(jobStatusOutput.num_enqueued_tasks);
             setNumFilesGenerated(jobStatusOutput.num_files_generated);
+            setResultPath(jobStatusOutput?.result_path);
 
             setNumBusyWorkers(workersOutput.num_busy_workers);
             setNumIdleWorkers(workersOutput.total_num_workers - workersOutput.num_busy_workers);
@@ -80,6 +83,7 @@ const FileProcessor: React.FC = () => {
             if(status == "COMPLETED" || status == "FAILED") {
               clearInterval(id);
               setLoading(false);
+              setResultPath(`api/data/${jobStatusOutput.job_id}/aggregate_result.json`) // temporary - it should be fetched from backend
             }
           } catch(err) {
             console.error(err);
@@ -116,6 +120,11 @@ const FileProcessor: React.FC = () => {
         Busy Workers: <b>{numBusyWorkers}</b>
         <br/>
         Idle Workers: <b>{numIdleWorkers}</b>
+        <br/>
+        <br></br>
+        {resultPath && <>
+        Aggregated result can be found at {resultPath} in your local system.
+        </>}
         </>
   }
   
