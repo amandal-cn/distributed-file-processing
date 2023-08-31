@@ -1,14 +1,14 @@
 # Build and Start API
 cd api
 npm install
-npx tsc
-node dist/index.js
+npm run build
+npm start &
 cd ..
 
 # Build and Start UI
 cd ui
 npm install
-npm start
+npm start &
 cd ..
 
 # Install worker dependencies

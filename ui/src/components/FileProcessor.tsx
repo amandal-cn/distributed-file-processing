@@ -80,7 +80,7 @@ const FileProcessor: React.FC = () => {
             setProgress(currentProgress);
 
             const status = jobStatusOutput.status;
-            if(status == "COMPLETED" || status == "FAILED") {
+            if(status === "COMPLETED" || status === "FAILED") {
               clearInterval(id);
               setLoading(false);
               setResultPath(`api/data/${jobStatusOutput.job_id}/aggregate_result.json`) // temporary - it should be fetched from backend

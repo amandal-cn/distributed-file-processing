@@ -5,11 +5,11 @@ import sys
 import logging
 import json
 
-from constants import REDIS_HOST, REDIS_PORT, RABBITMQ_HOST, NUM_BUSY_WORKERS, TASK_QUEUE_NAME
+from constants import REDIS_HOST, REDIS_PORT, RABBITMQ_HOST, NUM_BUSY_WORKERS, TASK_QUEUE_NAME, MAX_WORKERS
 from task_handlers import process_task, aggregate_results
 from utils.logger import init_logger
 from utils.redis_utils import completed_tasks_key, get_num_completed_tasks, get_total_num_tasks, \
-    result_aggregation_status_key, get_aggregate_result_status, clean_up, job_status_key, get_num_entries_per_file, result_path_key
+    result_aggregation_key, clean_up, job_status_key, get_num_entries_per_file, result_path_key
 
 logger = init_logger(__name__, logging.DEBUG)
 
@@ -24,26 +24,27 @@ def start_worker(_):
     def aggregate_if_ready(job_id):        
         total_num_tasks = get_total_num_tasks(redis_client, job_id)
         num_completed_tasks = get_num_completed_tasks(redis_client, job_id)
-        aggregate_result_status = get_aggregate_result_status(redis_client, job_id)
         num_entries_per_file = get_num_entries_per_file(redis_client, job_id)
         
-        logger.info(f"total_num_of_tasks: {total_num_tasks}, num_completed_tasks: {num_completed_tasks}, aggregate_result_status: {aggregate_result_status}, job: {job_id}")
-        if total_num_tasks != num_completed_tasks or aggregate_result_status == "running" or aggregate_result_status == "completed":
+        logger.info(f"total_num_of_tasks: {total_num_tasks}, num_completed_tasks: {num_completed_tasks}, job: {job_id}")
+        if total_num_tasks != num_completed_tasks:
             return
         
-        logger.info(f"aggregating result for job: {job_id}");
-        # trigger the aggregation
-        redis_client.set(result_aggregation_status_key(job_id), "running")
+        # get the lock for aggregation
+        if redis_client.setnx(result_aggregation_key(job_id), "true"):
+            logger.info(f"Acquired lock. Aggregating result for job: {job_id}");
+        else:
+            logger.info(f"Aggregation is already running.")
+        
         try:
             redis_client.set(job_status_key(job_id), "AGGREGATING")
             logger.info(f"successfully set job status to AGGREGATING for job: {job_id}")
             result_path = aggregate_results(job_id, num_entries_per_file)
-            redis_client.set(result_aggregation_status_key(job_id), "completed")
             redis_client.set(job_status_key(job_id), "COMPLETED")
             redis_client.set(result_path_key(job_id), result_path)
         except Exception as e:
             logger.error(f"Error aggregating result for job {job_id} - {str(e)}")
-            redis_client.set(result_aggregation_status_key(job_id), "failed")
+            redis_client.delete(result_aggregation_key(job_id))
             redis_client.set(job_status_key(job_id), "FAILED")
         finally:
             clean_up(redis_client, job_id)
@@ -72,14 +73,14 @@ def start_worker(_):
             # increase the number of completed tasks
             redis_client.incr(completed_tasks_key(job_id))
             
-            # set the worker as idle
-            redis_client.decr(NUM_BUSY_WORKERS)
-            
             logger.info(f"completed task {task['task_id']} for job {task['job_id']}")
             
             aggregate_if_ready(task['job_id'])
             
             logger.info(f"completed task: {task['task_id']}")
+            
+            # set the worker as idle
+            redis_client.decr(NUM_BUSY_WORKERS)
             
         except Exception as e:
             logger.error(f"Error processing task {task['task_id']} for job {task['job_id']} - {str(e)}")
@@ -100,5 +101,6 @@ if __name__ == "__main__":
     
     # start workers
     max_workers = int(sys.argv[1])
+    redis_client.set(MAX_WORKERS, max_workers)    
     with Pool(max_workers) as p:
         p.map(start_worker, range(max_workers))

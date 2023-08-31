@@ -8,12 +8,16 @@ import { SubmitJobInput } from './types/Jobs';
 
 import { spawnWorkers, getWorkers } from './handlers/Workers';
 import { submitJob, getJobStatus } from './handlers/Jobs';
+import { set } from "./utils/Redis";
 
 dotenv.config();
 
 const app: Express = express();
 app.use(json());
 app.use(cors());
+
+set("max_workers", 0);
+set("num_busy_workers", 0);
 
 // spawn workers
 app.post('/workers', (req: Request<{}, {}, SpawnWorkersInput>, res: Response) => {

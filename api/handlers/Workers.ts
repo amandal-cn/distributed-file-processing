@@ -25,7 +25,6 @@ export function spawnWorkers(req: Request<{}, {}, SpawnWorkersInput>, res: Respo
   
     // Some processing code
     startTaskManager(max_workers);
-    set("max_workers", max_workers);
 
     const spawnWorkersOutput: SpawnWorkersOutput = {
         message: `Successfully spawned ${max_workers} workers`
